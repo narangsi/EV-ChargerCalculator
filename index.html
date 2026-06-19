@@ -1,0 +1,492 @@
+```html
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EV Charging Calculator (Soft UI)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Noto Sans Thai -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ตั้งค่าฟอนต์หลัก */
+    body {
+      font-family: 'Inter', 'Noto Sans Thai', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      transition: all 0.4s ease;
+    }
+
+    /* กำหนดตัวแปรสำหรับระบบ Neumorphic */
+    :root {
+      /* โทนอุ่นงาช้าง (Warm Ivory Theme - อ้างอิงจากรูปใบที่สอง) */
+      --bg-color: #f5f2eb;
+      --raised-shadow: 10px 10px 20px #dedbd4, -10px -10px 20px #ffffff;
+      --raised-shadow-sm: 5px 5px 10px #dedbd4, -5px -5px 10px #ffffff;
+      --inset-shadow: inset 6px 6px 12px #dedbd4, inset -6px -6px 12px #ffffff;
+      --inset-shadow-sm: inset 3px 3px 6px #dedbd4, inset -3px -3px 6px #ffffff;
+      --text-primary: #3d3b38;
+      --text-secondary: #7d7973;
+      --accent-color: #0c5e5e;
+      --accent-light: #e6f0f0;
+      --border-color: #e5e2da;
+    }
+
+    /* คลาส Neumorphism หลัก */
+    .neo-raised {
+      background: var(--bg-color);
+      box-shadow: var(--raised-shadow);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+
+    .neo-raised-sm {
+      background: var(--bg-color);
+      box-shadow: var(--raised-shadow-sm);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .neo-inset {
+      background: var(--bg-color);
+      box-shadow: var(--inset-shadow);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .neo-inset-sm {
+      background: var(--bg-color);
+      box-shadow: var(--inset-shadow-sm);
+    }
+
+    /* สถานะเมื่อกดปุ่มชิปแบบ Interactive */
+    .neo-btn-active {
+      background: var(--bg-color);
+      box-shadow: var(--inset-shadow);
+      color: var(--accent-color) !important;
+      font-weight: 600;
+      border: 2px solid var(--accent-color);
+    }
+
+    /* ซ่อน Input Range ของระบบเดิมเพื่อแต่งใหม่ */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      background: var(--bg-color);
+      box-shadow: var(--inset-shadow-sm);
+      border-radius: 9999px;
+      height: 10px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      margin-top: -5px;
+      background-color: var(--accent-color);
+      border: 3px solid #ffffff;
+      border-radius: 9999px;
+      height: 20px;
+      width: 20px;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.15);
+      transition: transform 0.1s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:active {
+      transform: scale(1.2);
+    }
+
+    /* แอนิเมชันสำหรับความนุ่มนวลในการเปลี่ยนค่า */
+    .transition-soft {
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+  </style>
+</head>
+<body class="flex justify-center items-start min-h-screen p-4 sm:p-6 select-none">
+
+  <!-- Main Container: ออกแบบโครงสร้างสำหรับเปิดบน Mobile -->
+  <main class="w-full max-w-md neo-raised rounded-[32px] p-6 flex flex-col gap-6 relative overflow-hidden">
+    
+    <!-- Header App -->
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <!-- SVG ไอคอนสถานีชาร์จแบบนูนเด่น -->
+        <div class="w-10 h-10 rounded-full neo-raised-sm flex items-center justify-center text-[#0c5e5e]">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-wide">EV Charging</h1>
+          <p class="text-xs opacity-60">เครื่องมือคำนวณเวลาชาร์จละเอียด</p>
+        </div>
+      </div>
+      
+      <!-- ปุ่มเปลี่ยนธีมเพื่อดูความเปรียบต่าง -->
+      <button id="theme-toggle" class="w-9 h-9 rounded-full neo-raised-sm flex items-center justify-center hover:scale-105 active:scale-95 transition-all text-xs" title="เปลี่ยนโทนสี">
+        🎨
+      </button>
+    </div>
+
+    <!-- 1. Result Display Area (Raised Layer นูนเด่นตามรูปตัวอย่าง) -->
+    <section class="neo-raised rounded-2xl p-5 border border-white/80 relative overflow-hidden" id="result-card">
+      <div class="absolute top-0 left-0 w-2 h-full bg-[#0c5e5e] rounded-l-2xl"></div>
+      
+      <div class="flex justify-between items-start mb-4 pl-2">
+        <span class="text-xs font-semibold uppercase tracking-wider text-gray-500">ประมาณการผลลัพธ์</span>
+        <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#e6f0f0] text-[#0c5e5e] neo-raised-sm border border-emerald-100/50">Real-time</span>
+      </div>
+
+      <!-- ส่วนหัวข้อผลลัพธ์ที่ต้องการ (Target Time Reached) -->
+      <div class="pl-2 mb-3">
+        <p class="text-xs opacity-60">ควรตั้งเวลาหยุดชาร์จประมาณ</p>
+        <div class="text-2xl font-bold tracking-tight text-[#0c5e5e] flex items-baseline gap-1 mt-1" id="out-target-time">
+          --:-- น.
+        </div>
+      </div>
+
+      <!-- ระยะเวลาชาร์จทั้งหมด -->
+      <div class="pl-2 mb-3 border-t border-dashed border-gray-200 pt-3">
+        <p class="text-xs opacity-60">ระยะเวลาที่ใช้ในการชาร์จจริง</p>
+        <p class="text-lg font-semibold" id="out-duration">-- ชั่วโมง -- นาที</p>
+      </div>
+
+      <!-- พลังงานที่เติมเข้าไปและประสิทธิภาพเชิงลึก -->
+      <div class="pl-2 grid grid-cols-2 gap-2 text-xs border-t border-dashed border-gray-200 pt-3 opacity-80">
+        <div>
+          <span class="block opacity-60">พลังงานที่จะได้รับ:</span>
+          <span class="font-semibold text-sm" id="out-energy">-- kWh</span>
+        </div>
+        <div>
+          <span class="block opacity-60">กำลังชาร์จสูงสุด AC:</span>
+          <span class="font-semibold text-sm text-[#0c5e5e]" id="out-power">-- kW</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Target Vehicle Info Box -->
+    <section class="neo-inset rounded-2xl p-4 flex items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl neo-raised-sm flex items-center justify-center text-xl bg-[#e6f0f0]">
+          🚗
+        </div>
+        <div>
+          <p class="font-bold text-sm">Hyptec HT</p>
+          <p class="opacity-60">รถยนต์เป้าหมาย (แบตเตอรี่เริ่มต้น)</p>
+        </div>
+      </div>
+      <div class="text-right">
+        <label for="battery-capacity" class="block text-[10px] opacity-55">ความจุแบต (kWh)</label>
+        <input type="number" id="battery-capacity" value="83.3" step="0.1" 
+               class="w-16 text-right bg-transparent border-b border-[#0c5e5e] focus:outline-none font-bold text-sm text-[#0c5e5e]">
+      </div>
+    </section>
+
+    <!-- 3. INPUT FORM -->
+    <section class="flex flex-col gap-5">
+      
+      <!-- กระแสไฟฟ้า (Ampere Selectors) -->
+      <div>
+        <div class="flex justify-between items-center mb-2">
+          <label class="text-xs font-semibold text-gray-600">กระแสไฟฟ้าชาร์จ (Ampere)</label>
+          <span class="text-xs font-bold text-[#0c5e5e]" id="current-display">32A (7kW)</span>
+        </div>
+        <!-- Neumorphic Chips Selector -->
+        <div class="grid grid-cols-5 gap-2">
+          <button type="button" class="amp-btn py-2 text-xs rounded-xl neo-raised hover:scale-105 active:scale-95 transition-soft" data-amp="10">10A</button>
+          <button type="button" class="amp-btn py-2 text-xs rounded-xl neo-raised hover:scale-105 active:scale-95 transition-soft" data-amp="16">16A</button>
+          <button type="button" class="amp-btn py-2 text-xs rounded-xl neo-raised hover:scale-105 active:scale-95 transition-soft" data-amp="18">18A</button>
+          <button type="button" class="amp-btn py-2 text-xs rounded-xl neo-raised hover:scale-105 active:scale-95 transition-soft" data-amp="20">20A</button>
+          <button type="button" class="amp-btn py-2 text-xs rounded-xl neo-btn-active hover:scale-105 active:scale-95 transition-soft" data-amp="32">32A</button>
+        </div>
+      </div>
+
+      <!-- แบตเตอรี่ปัจจุบัน (Current Battery %) -->
+      <div>
+        <div class="flex justify-between items-center mb-1">
+          <label for="current-soc" class="text-xs font-semibold text-gray-600">เปอร์เซ็นต์แบตเตอรี่ปัจจุบัน</label>
+          <span class="text-sm font-bold text-[#0c5e5e]" id="current-soc-val">20%</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <input type="range" id="current-soc" min="0" max="99" value="20" class="w-full py-2">
+        </div>
+      </div>
+
+      <!-- แบตเตอรี่ที่ต้องการ (Target Battery %) -->
+      <div>
+        <div class="flex justify-between items-center mb-1">
+          <label for="target-soc" class="text-xs font-semibold text-gray-600">เปอร์เซ็นต์แบตเตอรี่ที่ต้องการ</label>
+          <span class="text-sm font-bold text-emerald-700" id="target-soc-val">85%</span>
+        </div>
+        <div class="flex items-center gap-3 mb-2">
+          <input type="range" id="target-soc" min="1" max="100" value="85" class="w-full py-2">
+        </div>
+        <!-- Quick Preset Buttons -->
+        <div class="flex gap-2 justify-end">
+          <span class="text-[10px] self-center opacity-60 mr-1">ปุ่มด่วน:</span>
+          <button type="button" class="preset-btn px-4 py-1 text-xs rounded-lg neo-raised hover:scale-105 active:scale-95 transition-soft" data-preset="85">ชาร์จถนอม 85%</button>
+          <button type="button" class="preset-btn px-4 py-1 text-xs rounded-lg neo-raised hover:scale-105 active:scale-95 transition-soft" data-preset="100">เต็มพิกัด 100%</button>
+        </div>
+      </div>
+
+      <!-- เวลาเริ่มต้นและแรงดันไฟฟ้า -->
+      <div class="grid grid-cols-2 gap-4">
+        <!-- เวลาที่เริ่มชาร์จ -->
+        <div>
+          <label for="start-time" class="block text-xs font-semibold text-gray-600 mb-1">เวลาที่เริ่มชาร์จ</label>
+          <div class="neo-inset rounded-xl p-1 flex items-center justify-center">
+            <input type="time" id="start-time" value="22:00" 
+                   class="bg-transparent text-sm text-center font-semibold w-full py-1 text-gray-700 focus:outline-none">
+          </div>
+        </div>
+        
+        <!-- แรงดันไฟฟ้าคงที่ -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">แรงดันไฟฟ้าคงที่</label>
+          <div class="neo-inset rounded-xl p-1 text-center py-2 text-sm font-bold text-gray-400">
+            220V (1 Phase)
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ส่วนแสดงการแจ้งเตือนกรณีตรรกะมีข้อผิดพลาด -->
+    <div id="error-toast" class="hidden rounded-xl p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs text-center neo-raised-sm transition-soft">
+      ⚠️ เปอร์เซ็นต์เป้าหมายต้องสูงกว่าแบตเตอรี่ปัจจุบันเพื่อคำนวณ
+    </div>
+
+    <!-- รายละเอียดเชิงวิชาการเพื่อแสดงความโปร่งใสของสูตร (Technical Details Accordion) -->
+    <details class="neo-raised-sm rounded-xl p-3 text-xs cursor-pointer select-none">
+      <summary class="font-semibold text-gray-600 flex justify-between items-center outline-none">
+        <span>⚙️ ข้อมูลทางเทคนิคและสูตรคำนวณ</span>
+        <span class="text-[10px] text-gray-400">คลิกเพื่อดู</span>
+      </summary>
+      <div class="mt-2 text-[11px] leading-relaxed text-gray-500 space-y-1 pt-2 border-t border-gray-200/50">
+        <p>• <strong>สูตรคำนวณหลัก:</strong> $P = \frac{V \times A}{1000}$</p>
+        <p>• <strong>ช่วง SOC 0-80%:</strong> ประสิทธิภาพ $90\%$ (สูญเสียความร้อน $10\%$)</p>
+        <p>• <strong>ช่วง SOC 80-100%:</strong> ประสิทธิภาพ $45\%$ (ลดกระแสตามโปรแกรม BMS)</p>
+        <p class="text-amber-800 bg-amber-50 p-1.5 rounded-lg mt-1">
+          * หมายเหตุ: ในการชาร์จแบบ AC กำลังไฟต่ำ (7kW) รถยนต์อาจชาร์จเต็มเร็วขึ้นเนื่องจาก BMS ไม่ต้องลดกำลังลงมากเท่า DC Fast Charge แต่สูตรนี้ปรับลดเพื่อความปลอดภัย (Safety Buffer)
+        </p>
+      </div>
+    </details>
+
+    <!-- เครดิตผู้พัฒนา -->
+    <footer class="text-center text-[10px] opacity-40">
+      EV Charging Neumorphic Calculator v2.0
+    </footer>
+  </main>
+
+  <script>
+    // เริ่มต้นระบบและค่าของตัวแปรหลัก
+    let currentAmp = 32;
+    const volt = 220;
+
+    // การเชื่อมโยง DOM Elements
+    const batteryCapacityInput = document.getElementById('battery-capacity');
+    const currentSocInput = document.getElementById('current-soc');
+    const currentSocVal = document.getElementById('current-soc-val');
+    const targetSocInput = document.getElementById('target-soc');
+    const targetSocVal = document.getElementById('target-soc-val');
+    const startTimeInput = document.getElementById('start-time');
+    
+    // Output Elements
+    const outTargetTime = document.getElementById('out-target-time');
+    const outDuration = document.getElementById('out-duration');
+    const outEnergy = document.getElementById('out-energy');
+    const outPower = document.getElementById('out-power');
+    const currentDisplay = document.getElementById('current-display');
+    const errorToast = document.getElementById('error-toast');
+    const themeToggle = document.getElementById('theme-toggle');
+
+    // ฟังก์ชันในการอัปเดตสไตล์ของปุ่มเลือกกระแสไฟ
+    function updateAmpButtons(selectedAmp) {
+      currentAmp = selectedAmp;
+      document.querySelectorAll('.amp-btn').forEach(btn => {
+        const amp = parseInt(btn.getAttribute('data-amp'));
+        if (amp === selectedAmp) {
+          btn.className = "amp-btn py-2 text-xs rounded-xl neo-btn-active hover:scale-105 active:scale-95 transition-soft";
+        } else {
+          btn.className = "amp-btn py-2 text-xs rounded-xl neo-raised hover:scale-105 active:scale-95 transition-soft";
+        }
+      });
+      
+      const kw = (volt * selectedAmp) / 1000;
+      currentDisplay.innerText = `${selectedAmp}A (${kw.toFixed(2)} kW)`;
+      calculate();
+    }
+
+    // ฟังก์ชันคำนวณกำลังไฟฟ้าและประมาณเวลาชาร์จจริงตามสูตรที่กำหนด
+    function calculate() {
+      const capacity = parseFloat(batteryCapacityInput.value) || 83.3;
+      const currentSoc = parseFloat(currentSocInput.value);
+      const targetSoc = parseFloat(targetSocInput.value);
+      const startTimeStr = startTimeInput.value;
+
+      // ป้องกันการเลือก SOC ปัจจุบันสูงกว่าเป้าหมาย
+      if (currentSoc >= targetSoc) {
+        errorToast.classList.remove('hidden');
+        outTargetTime.innerHTML = `<span class="text-rose-500 text-lg">ระบุข้อมูลไม่ถูกต้อง</span>`;
+        outDuration.innerText = "ไม่สามารถคำนวณได้";
+        outEnergy.innerText = "0.00 kWh";
+        outPower.innerText = "0.00 kW";
+        return;
+      } else {
+        errorToast.classList.add('hidden');
+      }
+
+      // 1. คำนวณความต้องการพลังงาน (kWh) แบ่งเป็น 2 เฟสตามหลักวิชาการ
+      // เฟสที่ 1: ช่วงชาร์จปกติ 0% ถึง 80% (Efficiency = 90%)
+      const startSoc1 = currentSoc;
+      const endSoc1 = Math.min(targetSoc, 80);
+      let energyPhase1 = 0;
+      if (endSoc1 > startSoc1) {
+        energyPhase1 = capacity * ((endSoc1 - startSoc1) / 100);
+      }
+
+      // เฟสที่ 2: ช่วงกระแสลดลง 80% ถึง 100% (Efficiency = 45% เพื่อเซฟตี้บัฟเฟอร์)
+      const startSoc2 = Math.max(currentSoc, 80);
+      const endSoc2 = Math.max(targetSoc, 80);
+      let energyPhase2 = 0;
+      if (endSoc2 > startSoc2) {
+        energyPhase2 = capacity * ((endSoc2 - startSoc2) / 100);
+      }
+
+      // กำลังชาร์จตามทฤษฎี (kW)
+      const basePowerKw = (volt * currentAmp) / 1000;
+
+      // กำลังชาร์จที่ใช้คำนวณจริงหลังปรับทอนประสิทธิภาพ
+      const powerPhase1 = basePowerKw * 0.90; // เฟส 1 ประสิทธิภาพ 90%
+      const powerPhase2 = basePowerKw * 0.45; // เฟส 2 ประสิทธิภาพ 45%
+
+      // เวลาที่ใช้นาทีในแต่ละช่วง
+      const hoursPhase1 = energyPhase1 > 0 ? (energyPhase1 / powerPhase1) : 0;
+      const hoursPhase2 = energyPhase2 > 0 ? (energyPhase2 / powerPhase2) : 0;
+      
+      const totalHours = hoursPhase1 + hoursPhase2;
+      const totalMinutes = Math.round(totalHours * 60);
+
+      // แปลงเป็น ชั่วโมง และ นาที
+      const displayHours = Math.floor(totalMinutes / 60);
+      const displayMinutes = totalMinutes % 60;
+
+      // 2. คำนวณเวลาที่จะชาร์จเสร็จสิ้น (Target Time Reached)
+      const [startH, startM] = startTimeStr.split(':').map(Number);
+      const targetDate = new Date();
+      targetDate.setHours(startH, startM, 0, 0);
+      
+      // เพิ่มเวลาที่ใช้คำนวณได้เข้าไป
+      targetDate.setMinutes(targetDate.getMinutes() + totalMinutes);
+
+      const targetHourStr = String(targetDate.getHours()).padStart(2, '0');
+      const targetMinStr = String(targetDate.getMinutes()).padStart(2, '0');
+
+      // ตรวจสอบความข้ามวันเพื่อแสดงข้อความชัดเจน
+      const isNextDay = targetDate.getDate() !== new Date().getDate();
+      const dayLabel = isNextDay ? " <span class='text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md neo-raised-sm'>(วันถัดไป)</span>" : "";
+
+      // 3. แสดงผลลัพธ์ลง UI
+      outTargetTime.innerHTML = `${targetHourStr}:${targetMinStr} น.${dayLabel}`;
+      outDuration.innerText = `${displayHours} ชั่วโมง ${displayMinutes} นาที`;
+      
+      const totalEnergyNeeded = energyPhase1 + energyPhase2;
+      outEnergy.innerText = `${totalEnergyNeeded.toFixed(2)} kWh`;
+      outPower.innerText = `${basePowerKw.toFixed(2)} kW`;
+    }
+
+    // กำหนด Event Listeners สำหรับการอัปเดตแบบเรียลไทม์
+    currentSocInput.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value);
+      currentSocVal.innerText = `${val}%`;
+      
+      // ดันค่าเป้าหมายให้มากกว่าค่าปัจจุบันเสมอ
+      if (val >= parseInt(targetSocInput.value)) {
+        targetSocInput.value = Math.min(val + 1, 100);
+        targetSocVal.innerText = `${targetSocInput.value}%`;
+      }
+      calculate();
+    });
+
+    targetSocInput.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value);
+      targetSocVal.innerText = `${val}%`;
+      
+      // ล็อกค่าปัจจุบันไม่ให้เกินค่าเป้าหมาย
+      if (val <= parseInt(currentSocInput.value)) {
+        currentSocInput.value = Math.max(val - 1, 0);
+        currentSocVal.innerText = `${currentSocInput.value}%`;
+      }
+      calculate();
+    });
+
+    // ปุ่มเลือกค่าลัด (Preset Buttons)
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const val = parseInt(e.target.getAttribute('data-preset'));
+        targetSocInput.value = val;
+        targetSocVal.innerText = `${val}%`;
+        
+        // ถ้าค่าปัจจุบันมากกว่าค่าเป้าหมายที่เลือกใหม่ ให้ปรับลดลงมา
+        if (parseInt(currentSocInput.value) >= val) {
+          currentSocInput.value = val - 15; // ปรับลงมาเป็นระยะปลอดภัย
+          currentSocVal.innerText = `${currentSocInput.value}%`;
+        }
+        calculate();
+      });
+    });
+
+    // คุมการกรอกกำลังความจุแบตเตอรี่และเวลาเริ่มต้น
+    batteryCapacityInput.addEventListener('input', calculate);
+    startTimeInput.addEventListener('input', calculate);
+
+    // ปุ่มเลือกกระแสไฟฟ้า (Ampere Buttons)
+    document.querySelectorAll('.amp-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const amp = parseInt(e.target.getAttribute('data-amp'));
+        updateAmpButtons(amp);
+      });
+    });
+
+    // ฟังก์ชันสลับสีธีมเพื่อทดสอบงาน UI/UX
+    let isIvory = true;
+    themeToggle.addEventListener('click', () => {
+      isIvory = !isIvory;
+      const root = document.documentElement;
+      if (isIvory) {
+        root.style.setProperty('--bg-color', '#f5f2eb');
+        root.style.setProperty('--raised-shadow', '10px 10px 20px #dedbd4, -10px -10px 20px #ffffff');
+        root.style.setProperty('--raised-shadow-sm', '5px 5px 10px #dedbd4, -5px -5px 10px #ffffff');
+        root.style.setProperty('--inset-shadow', 'inset 6px 6px 12px #dedbd4, inset -6px -6px 12px #ffffff');
+        root.style.setProperty('--inset-shadow-sm', 'inset 3px 3px 6px #dedbd4, inset -3px -3px 6px #ffffff');
+        root.style.setProperty('--text-primary', '#3d3b38');
+        root.style.setProperty('--accent-color', '#0c5e5e');
+        root.style.setProperty('--border-color', '#e5e2da');
+      } else {
+        // สลับเป็นโทนสีเทาคลาสสิก (Soft Modern Gray - อ้างอิงจากรูปใบแรก)
+        root.style.setProperty('--bg-color', '#eef2f5');
+        root.style.setProperty('--raised-shadow', '10px 10px 20px #d1d7dc, -10px -10px 20px #ffffff');
+        root.style.setProperty('--raised-shadow-sm', '5px 5px 10px #d1d7dc, -5px -5px 10px #ffffff');
+        root.style.setProperty('--inset-shadow', 'inset 6px 6px 12px #d1d7dc, inset -6px -6px 12px #ffffff');
+        root.style.setProperty('--inset-shadow-sm', 'inset 3px 3px 6px #d1d7dc, inset -3px -3px 6px #ffffff');
+        root.style.setProperty('--text-primary', '#2c3e50');
+        root.style.setProperty('--accent-color', '#2d68c4');
+        root.style.setProperty('--border-color', '#cfd6db');
+      }
+      calculate();
+    });
+
+    // รันการคำนวณเบื้องต้นเมื่อโหลดหน้าเพจเสร็จสิ้น
+    window.onload = function() {
+      calculate();
+    }
+  </script>
+</body>
+</html>
+
+```
