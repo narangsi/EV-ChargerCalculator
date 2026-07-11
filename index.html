@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <!-- เพิ่ม viewport-fit=cover เพื่อให้พื้นหลังสีฟ้า EV เต็มจอทะลุ Magic Island ด้านบนสุด -->
+  <!-- กำหนด viewport-fit=cover เพื่อให้พื้นหลังสีฟ้า EV เต็มจอทะลุขอบบนสุดอย่างสมบูรณ์ -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>EV Charging Calculator V1.5 (Skeuomorphic EV Blue)</title>
   
@@ -27,7 +27,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400&display=swap" rel="stylesheet">
   
   <style>
-    /* ตั้งค่าฟอนต์หลักภาษาไทยแบบมีหัว Sarabun และสเกลที่อ่านง่ายสบายตา */
     html, body {
       margin: 0;
       padding: 0;
@@ -37,7 +36,7 @@
 
     body {
       font-family: 'Sarabun', sans-serif;
-      /* บน Mobile ตั้งค่าพื้นหลังสำรองเป็นสีกรมท่าเข้ม เพื่อป้องกันขอบสีขาวกระพริบตอนลากจอ */
+      /* บน Mobile ตั้งค่าพื้นหลังสำรองเป็นสีกรมท่าเข้ม เพื่อป้องกันขอบขาวสวิงเวลาสไลด์จอสุดขอบ */
       background-color: #03045E; 
       color: var(--text-primary);
       font-size: 16px;
@@ -46,8 +45,16 @@
 
     @media (min-width: 768px) {
       body {
-        background-color: #DDE5E9; /* พื้นหลังภายนอกสไตล์โต๊ะทำงานสีเทาโครมเมื่อดูบน Desktop */
+        background-color: #DDE5E9; /* พื้นหลังภายนอกแบบจำลองโต๊ะทำงานเมื่อเปิดดูบน Desktop */
       }
+    }
+
+    /* คำสั่งควบคุม iOS Safe Area แบบกำหนดเอง เพื่อหลบ Dynamic Island และ Home Indicator */
+    .pt-safe {
+      padding-top: calc(env(safe-area-inset-top) + 14px);
+    }
+    .pb-safe {
+      padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
     }
 
     /* ตัวแปรสีและมิติเงาสไตล์ Skeuomorphism คมลึก สมจริง ไร้ขอบฟุ้งรบกวนตา */
@@ -63,7 +70,7 @@
       --accent-turquoise: #00D9C0; /* สีเขียวเทอร์ควอยซ์เรืองแสง */
       
       /* มิติ 3D นูนเสมือนจริงของขอบเพลตที่ติดตั้งบนตัวตู้สีน้ำเงิน */
-      /* ปรับปรุงใหม่: ลดรัศมีความฟุ้ง (Blur) ลงเหลือ 5px และสลับสีเงาเป็นโทนสีกรมท่าสะท้อนสีฟ้า เพื่อขับความลึกอย่างสมจริง */
+      /* สลับสีเงาเป็นโทนสีกรมท่าสะท้อนสีฟ้า เพื่อขับความลึกอย่างสมจริงและลดความฟุ้งเลอะขอบ */
       --panel-raised: 3px 3px 5px rgba(2, 4, 50, 0.45), -3px -3px 5px rgba(0, 240, 255, 0.22);
       --panel-border-bevel: inset 1px 1px 0px #ffffff, inset -1px -1px 0px rgba(176,190,197,0.5);
       
@@ -190,14 +197,17 @@
   <!-- 
     บอดี้หลักแบบ iPhone 15 Pro Max Ready 
     ไม่มีระยะขอบสีขาวด้านบนด้วย viewport-fit=cover 
-    และเกลี่ยความสูงได้อย่างลงตัวพอดีหน้าจอ 
+    และใช้การจัดเรียงโครงสร้างที่ยืดหยุ่นไม่ให้ล้นจอ
   -->
   <main class="w-full h-screen md:w-[430px] md:h-[932px] md:rounded-[48px] p-5 flex flex-col justify-between relative overflow-hidden no-scrollbar" style="background: var(--ev-blue-gradient); box-shadow: 15px 15px 35px rgba(0, 40, 80, 0.4), -15px -15px 35px rgba(255,255,255,0.15); border: 1.5px solid rgba(0, 240, 255, 0.25);">
     
     <!-- แถบแสงสะท้อนโครเมียมสะท้อนมิติขอบขวาบน -->
     <div class="absolute top-0 left-0 w-full h-1 bg-white opacity-20 z-55"></div>
 
-    <!-- ส่วนหัวแอปพลิเคชัน (Header) แสดงไอคอน PWA และ Branding พรีเมียม -->
+    <!-- 
+      ส่วนหัวแอปพลิเคชัน (Header) ปรับเพิ่ม pt-safe 
+      ที่อิงตาม safe-area-inset-top จริงของ iOS 15+ เพื่อไม่ให้ทับซ้อนกับ Dynamic Island และแถบสถานะเวลา 
+    -->
     <header class="flex items-center gap-3 pt-safe">
       <!-- ไอคอนแอปทางการ IconAppEVC.png ในกรอบ Skeuomorphic มิติคมสวยงาม -->
       <div class="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden p-1 bg-[#EAEFF2]" style="box-shadow: 2px 3px 6px rgba(2, 4, 50, 0.4), inset 1.5px 1.5px 0px #ffffff; border: 1px solid rgba(0, 217, 192, 0.3);">
@@ -209,6 +219,7 @@
       </div>
     </header>
 
+    <!-- -->
     <!-- 1. หน้าจอ LCD แก้วเรืองแสง (Glossy Integrated Display - แสดงผลลัพธ์หรูกระชับไม่มีล้น) -->
     <section class="rounded-2xl p-4 border border-white/20 relative overflow-hidden" style="background: linear-gradient(135deg, #121A21 0%, #080D11 100%); box-shadow: inset 3px 3px 8px rgba(0,0,0,0.6), 0px 3px 8px rgba(255,255,255,0.08);">
       
@@ -264,6 +275,7 @@
       </div>
     </section>
 
+    <!-- -->
     <!-- 3. ส่วนควบคุมข้อมูลป้อนเข้าทั้งหมด (แผงเพลตควบคุมสีเทาเดิมขนาดใหญ่ บรรจุสวิตช์ 3D) -->
     <section class="skeuo-panel p-4 flex flex-col gap-3.5">
       
@@ -359,7 +371,7 @@
   </main>
 
   <script>
-    // ประกาศฐานตัวแปรตั้งต้นตามสูตร Core Engine V1.5 (ยึดหลัก Real-world โดยสมบูรณ์)
+    //    // ประกาศฐานตัวแปรตั้งต้นตามสูตร Core Engine V1.5 (ยึดหลัก Real-world โดยสมบูรณ์)
     let currentAmp = 32;
     let volt = 231; // แรงดันไฟฟ้าคงที่ 231V Calibrated เป็นค่าเริ่มต้น
 
