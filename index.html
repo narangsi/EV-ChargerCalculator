@@ -2,7 +2,8 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- เพิ่ม viewport-fit=cover เพื่อให้พื้นหลังสีฟ้า EV เต็มจอทะลุ Magic Island ด้านบนสุด -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>EV Charging Calculator V1.5 (Skeuomorphic EV Blue)</title>
   
   <!-- Add to Home Screen / Progressive Web App (PWA) Meta Tags -->
@@ -14,7 +15,7 @@
   
   <!-- iOS Safari Add to Home Screen -->
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="EV Cal V1.5">
   <link rel="apple-touch-icon" href="IconAppEV.png">
 
@@ -27,18 +28,32 @@
   
   <style>
     /* ตั้งค่าฟอนต์หลักภาษาไทยแบบมีหัว Sarabun และสเกลที่อ่านง่ายสบายตา */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+    }
+
     body {
       font-family: 'Sarabun', sans-serif;
-      background-color: #DDE5E9; /* พื้นหลังภายนอกสไตล์โต๊ะทำงานสีเทาโครม */
+      /* บน Mobile ตั้งค่าพื้นหลังสำรองเป็นสีกรมท่าเข้ม เพื่อป้องกันขอบสีขาวกระพริบตอนลากจอ */
+      background-color: #03045E; 
       color: var(--text-primary);
       font-size: 16px;
       transition: all 0.3s ease;
     }
 
-    /* ตัวแปรสีและมิติเงาสไตล์ Skeuomorphism (3D Physical Realism) */
+    @media (min-width: 768px) {
+      body {
+        background-color: #DDE5E9; /* พื้นหลังภายนอกสไตล์โต๊ะทำงานสีเทาโครมเมื่อดูบน Desktop */
+      }
+    }
+
+    /* ตัวแปรสีและมิติเงาสไตล์ Skeuomorphism คมลึก สมจริง ไร้ขอบฟุ้งรบกวนตา */
     :root {
       /* สีฟ้า EV สุดล้ำ (Electric EV Charging Blue) สำหรับโครงเคสภายนอก */
-      --ev-blue-gradient: linear-gradient(145deg, #00b4d8, #0077b6, #03045e);
+      --ev-blue-gradient: linear-gradient(180deg, #00b4d8 0%, #0077b6 40%, #03045e 100%);
       --ev-blue-highlight: #00f0ff;
       
       /* สีแผงควบคุมเทาเดิมแบบอุปกรณ์อุตสาหกรรม (Industrial Matte Gray Panel) */
@@ -47,23 +62,24 @@
       --text-secondary: #5A6B7C;
       --accent-turquoise: #00D9C0; /* สีเขียวเทอร์ควอยซ์เรืองแสง */
       
-      /* เงา 3D นูนเสมือนจริงของขอบตู้และเพลต (Skeuomorphic Edge Shadows) */
-      --panel-raised: 8px 8px 16px #afb5bc, -8px -8px 16px #ffffff;
-      --panel-border-bevel: inset 1.5px 1.5px 0px #ffffff, inset -1.5px -1.5px 0px #b0bec5;
+      /* มิติ 3D นูนเสมือนจริงของขอบเพลตที่ติดตั้งบนตัวตู้สีน้ำเงิน */
+      /* ปรับปรุงใหม่: ลดรัศมีความฟุ้ง (Blur) ลงเหลือ 5px และสลับสีเงาเป็นโทนสีกรมท่าสะท้อนสีฟ้า เพื่อขับความลึกอย่างสมจริง */
+      --panel-raised: 3px 3px 5px rgba(2, 4, 50, 0.45), -3px -3px 5px rgba(0, 240, 255, 0.22);
+      --panel-border-bevel: inset 1px 1px 0px #ffffff, inset -1px -1px 0px rgba(176,190,197,0.5);
       
-      /* เงายุบลงไปสำหรับร่องและพอร์ต (Deep Slot / Inset Well) */
-      --slot-inset: inset 4px 4px 8px #b0bec5, inset -4px -4px 8px #ffffff;
+      /* เงายุบลงไปสำหรับร่องปรับค่า (Deep Slot / Inset Well) */
+      --slot-inset: inset 2.5px 2.5px 4px rgba(165, 175, 190, 0.8), inset -2.5px -2.5px 4px #ffffff;
       
       /* มิติปุ่มกดแบบปุ่มฟิสิคัล (Tactile Key Bevels) */
-      --btn-raised: 4px 4px 8px #b8bfc4, -4px -4px 8px #ffffff;
-      --btn-inset: inset 3px 3px 6px #aeb5ba, inset -3px -3px 6px #ffffff;
+      --btn-raised: 2px 2px 3px rgba(165, 175, 190, 0.7), -2px -2px 3px #ffffff;
+      --btn-inset: inset 2px 2px 3px rgba(165, 175, 190, 0.85), inset -2px -2px 3px #ffffff;
     }
 
-    /* คลาสโครงสร้างสำหรับ 3D Control Plates (สีเทาเดิมแบบ Skeuomorphic) */
+    /* คลาสโครงสร้างสำหรับ 3D Control Plates (สีเทาเดิมแบบ Skeuomorphic คมกริบ) */
     .skeuo-panel {
       background-color: var(--panel-bg);
       border-radius: 18px;
-      box-shadow: var(--panel-raised), inset 2px 2px 0px rgba(255,255,255,0.9), inset -2px -2px 0px rgba(176,190,197,0.8);
+      box-shadow: var(--panel-raised), inset 1.5px 1.5px 0px rgba(255,255,255,0.9), inset -1.5px -1.5px 0px rgba(176,190,197,0.7);
     }
 
     .skeuo-panel-inset {
@@ -83,8 +99,8 @@
     }
 
     .skeuo-btn:active {
-      transform: translateY(1.5px);
-      box-shadow: inset 1px 1px 3px rgba(0,0,0,0.15);
+      transform: translateY(1px);
+      box-shadow: inset 1px 1px 2px rgba(0,0,0,0.15);
     }
 
     /* สถานะเมื่อปุ่มยุบตัวลงไปพร้อมไฟ LED สีเขียวเทอร์ควอยซ์เรืองแสง */
@@ -108,9 +124,9 @@
     /* ร่องรางลึก Inset Slot */
     input[type="range"]::-webkit-slider-runnable-track {
       background-color: #E2E7EA;
-      box-shadow: inset 3px 3px 6px #afb5bc, inset -3px -3px 6px #ffffff;
+      box-shadow: inset 2.5px 2.5px 4px rgba(165, 175, 190, 0.8), inset -2.5px -2.5px 4px #ffffff;
       border-radius: 9999px;
-      height: 14px;
+      height: 12px;
       border: 1px solid #CFD8DC;
     }
 
@@ -118,13 +134,13 @@
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      margin-top: -6px; /* จัดศูนย์กลางราง 14px กับ ปุ่ม 26px */
+      margin-top: -8px; /* จัดศูนย์กลางราง 12px กับ ปุ่ม 28px */
       background: radial-gradient(circle, #F1F4F6 0%, #CBD5E1 100%);
       border: 4px solid #FFFFFF;
       border-radius: 9999px;
-      height: 26px;
-      width: 26px;
-      box-shadow: 2px 4px 8px rgba(0,0,0,0.2), inset 1.5px 1.5px 0px rgba(255,255,255,1);
+      height: 28px;
+      width: 28px;
+      box-shadow: 2px 4px 6px rgba(0,0,0,0.22), inset 1px 1px 0px rgba(255,255,255,1);
       transition: transform 0.1s ease, filter 0.2s ease;
       cursor: pointer;
       position: relative;
@@ -138,9 +154,9 @@
     /* สำหรับเบราว์เซอร์ Firefox */
     input[type="range"]::-moz-range-track {
       background-color: #E2E7EA;
-      box-shadow: inset 3px 3px 6px #afb5bc, inset -3px -3px 6px #ffffff;
+      box-shadow: inset 2.5px 2.5px 4px rgba(165, 175, 190, 0.8), inset -2.5px -2.5px 4px #ffffff;
       border-radius: 9999px;
-      height: 14px;
+      height: 12px;
       border: 1px solid #CFD8DC;
     }
 
@@ -148,14 +164,14 @@
       background: radial-gradient(circle, #F1F4F6 0%, #CBD5E1 100%);
       border: 4px solid #FFFFFF;
       border-radius: 9999px;
-      height: 26px;
-      width: 26px;
-      box-shadow: 2px 4px 8px rgba(0,0,0,0.2), inset 1.5px 1.5px 0px rgba(255,255,255,1);
+      height: 28px;
+      width: 28px;
+      box-shadow: 2px 4px 6px rgba(0,0,0,0.22), inset 1px 1px 0px rgba(255,255,255,1);
       transition: transform 0.1s ease;
       cursor: pointer;
     }
 
-    /* ซ่อน Scrollbar ของ Container เพื่อรักษาความเป็น Native Application */
+    /* ซ่อน Scrollbar เพื่อคงความเป็นแอปพลิเคชันพื้นเมือง (Native App Look) */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -171,15 +187,20 @@
 </head>
 <body class="min-h-screen flex items-center justify-center p-0 md:p-6 overflow-x-hidden">
 
-  <main class="w-full h-screen md:w-[430px] md:h-[932px] md:rounded-[48px] p-5 flex flex-col justify-between relative overflow-hidden no-scrollbar" style="background: var(--ev-blue-gradient); box-shadow: 15px 15px 35px rgba(0, 79, 96, 0.35), -15px -15px 35px rgba(255,255,255,0.7); border: 2px solid rgba(0, 240, 255, 0.35);">
+  <!-- 
+    บอดี้หลักแบบ iPhone 15 Pro Max Ready 
+    ไม่มีระยะขอบสีขาวด้านบนด้วย viewport-fit=cover 
+    และเกลี่ยความสูงได้อย่างลงตัวพอดีหน้าจอ 
+  -->
+  <main class="w-full h-screen md:w-[430px] md:h-[932px] md:rounded-[48px] p-5 flex flex-col justify-between relative overflow-hidden no-scrollbar" style="background: var(--ev-blue-gradient); box-shadow: 15px 15px 35px rgba(0, 40, 80, 0.4), -15px -15px 35px rgba(255,255,255,0.15); border: 1.5px solid rgba(0, 240, 255, 0.25);">
     
-    <!-- แถบแสงไฟสะท้อนขอบตู้ (Metallic Reflective Accent) เพิ่มมิติแบบ Skeuomorphism -->
-    <div class="absolute top-0 left-0 w-full h-1 bg-white opacity-20"></div>
+    <!-- แถบแสงสะท้อนโครเมียมสะท้อนมิติขอบขวาบน -->
+    <div class="absolute top-0 left-0 w-full h-1 bg-white opacity-20 z-55"></div>
 
     <!-- ส่วนหัวแอปพลิเคชัน (Header) แสดงไอคอน PWA และ Branding พรีเมียม -->
-    <header class="flex items-center gap-3">
-      <!-- ไอคอนแอปทางการ IconAppEVC.png ในกรอบ Skeuomorphic ยกตัวลอยหนาพิเศษ -->
-      <div class="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden p-1 bg-[#EAEFF2]" style="box-shadow: 4px 4px 10px rgba(0,0,0,0.25), inset 2px 2px 0px #ffffff; border: 1.5px solid rgba(0, 217, 192, 0.4);">
+    <header class="flex items-center gap-3 pt-safe">
+      <!-- ไอคอนแอปทางการ IconAppEVC.png ในกรอบ Skeuomorphic มิติคมสวยงาม -->
+      <div class="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden p-1 bg-[#EAEFF2]" style="box-shadow: 2px 3px 6px rgba(2, 4, 50, 0.4), inset 1.5px 1.5px 0px #ffffff; border: 1px solid rgba(0, 217, 192, 0.3);">
         <img src="IconAppEVC.png" alt="EV Charging Icon" class="w-full h-full object-contain rounded-full">
       </div>
       <div>
@@ -189,14 +210,14 @@
     </header>
 
     <!-- 1. หน้าจอ LCD แก้วเรืองแสง (Glossy Integrated Display - แสดงผลลัพธ์หรูกระชับไม่มีล้น) -->
-    <section class="rounded-2xl p-4 border border-white/20 relative overflow-hidden" style="background: linear-gradient(135deg, #121A21 0%, #080D11 100%); box-shadow: inset 4px 4px 10px rgba(0,0,0,0.6), 0px 4px 10px rgba(255,255,255,0.1);">
+    <section class="rounded-2xl p-4 border border-white/20 relative overflow-hidden" style="background: linear-gradient(135deg, #121A21 0%, #080D11 100%); box-shadow: inset 3px 3px 8px rgba(0,0,0,0.6), 0px 3px 8px rgba(255,255,255,0.08);">
       
       <!-- หน้าจอมันวาว (Glass reflection) -->
       <div class="absolute top-0 right-0 w-full h-1/2 bg-white opacity-5 transform -skew-y-12"></div>
       
-      <div class="flex justify-between items-center mb-2">
+      <div class="flex justify-between items-center mb-1.5">
         <span class="text-[9px] font-bold uppercase tracking-widest text-[#00D9C0]/70">CHARGING STATUS</span>
-        <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-[#00D9C0]/10 text-teal-400 border border-[#00D9C0]/30 shadow-[0_0_8px_rgba(0,217,192,0.2)]">Active</span>
+        <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#00D9C0]/10 text-teal-400 border border-[#00D9C0]/30 shadow-[0_0_8px_rgba(0,217,192,0.2)]">Active</span>
       </div>
 
       <!-- ส่วนเวลาเสร็จสิ้น (Ready At) ตัวหนังสือสีเขียวเทอร์ควอยซ์เรืองแสงอวบอิ่ม สอดคล้องภาพต้นแบบ -->
@@ -251,7 +272,7 @@
         <div class="flex justify-between items-center mb-2">
           <label class="text-[12px] font-extrabold text-[#2C3E50]">กระแสไฟฟ้าชาร์จ (Ampere)</label>
           <!-- ช่องบอกสถานะเหมือนหน้าปัดอนาล็อก -->
-          <span class="text-[11px] font-bold text-[#00828C] px-2 py-0.5 rounded bg-[#E2E8EC] shadow-[inset_2px_2px_4px_#cbd0d8,inset_-2px_-2px_4px_#ffffff]" id="current-display">32A (7.39 kW)</span>
+          <span class="text-[11px] font-bold text-[#00828C] px-2 py-0.5 rounded bg-[#E2E8EC] shadow-[inset_1.5px_1.5px 3px rgba(165,175,190,0.7),inset_-1.5px_-1.5px 3px #ffffff]" id="current-display">32A (7.39 kW)</span>
         </div>
         <!-- Neumorphic Chips Selector ปุ่มพลาสติกนูนหนากลุ่มสีเทาเดิมตามสั่ง -->
         <div class="grid grid-cols-5 gap-1.5">
@@ -332,7 +353,7 @@
     </details>
 
     <!-- ข้อมูลแสดงเวอร์ชันและลิขสิทธิ์ตามหัวข้อ V1.5 -->
-    <footer class="text-center text-[10px] font-bold text-white/60 tracking-tight" style="text-shadow: 0px 1px 2px rgba(0,0,0,0.3);">
+    <footer class="text-center text-[10px] font-bold text-white/60 tracking-tight pb-safe" style="text-shadow: 0px 1px 2px rgba(0,0,0,0.3);">
       EV Charger Callculator for Hyptec HT V1.5
     </footer>
   </main>
